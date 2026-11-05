@@ -1,0 +1,88 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+.pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.cache/
+.parcel-cache/
+
+# Env files
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+pids/
+*.pid
+*.seed
+
+# Coverage
+coverage/
+coverage-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Misc
+*.tgz
+*.env.local
+/.env.local
+
+# Mac-specific
+.AppleDouble
+.LSOverride
+
+# Windows-specific
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Optional npm cache
+.npm
+
+# Lockfiles for pnpm
+pnpm-lock.yaml
+
+# TypeScript
+*.tsbuildinfo
+
+# Jest
+jest.config.js
+jest.config.ts
+
+# Yarn Berry
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/patches
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Parcel
+.cache/
+
+# Docker
+docker-compose.override.yml
+
+# Local files
+local.env
+
+# End of file
