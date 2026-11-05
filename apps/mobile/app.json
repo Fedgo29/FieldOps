@@ -1,0 +1,1 @@
+{"expo":{"name":"FieldOps","slug":"fieldops","version":"1.0.0","orientation":"portrait","userInterfaceStyle":"automatic","ios":{"supportsTablet":true},"android":{"package":"com.fieldops.app"},"plugins":["expo-secure-store"]}}
