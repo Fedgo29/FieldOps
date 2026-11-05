@@ -51,8 +51,8 @@ export class WorkOrdersService {
     throw new BadRequestException('Closed orders cannot be changed');
    if(input.technicianId!==undefined)await this.validateTechnician(input.technicianId,client);
    const status=input.status??order.status;
-   const sql='UPDATE work_orders SET title=$2,description=$3,priority=$4,status=$5,technician_id=$6,updated_at=NOW(),'+
-    "completed_at=CASE WHEN $5='COMPLETED' THEN NOW() ELSE completed_at END WHERE id=$1 RETURNING "+FIELDS;
+   const sql='UPDATE work_orders SET title=$2,description=$3,priority=$4,status=$5::varchar,technician_id=$6,updated_at=NOW(),'+
+    "completed_at=CASE WHEN $5::varchar='COMPLETED' THEN NOW() ELSE completed_at END WHERE id=$1 RETURNING "+FIELDS;
    const result=await client.query<WorkOrder>(sql,[
     id,input.title??order.title,input.description??order.description,input.priority??order.priority,
     status,input.technicianId??order.technician_id
