@@ -1,64 +1,19 @@
-
-import { Test, TestingModule } from '@nestjs/testing';
 import { WorkOrdersController } from './work-orders.controller';
 import { WorkOrdersService } from './work-orders.service';
-
-describe('WorkOrdersController', () => {
-  let controller: WorkOrdersController;
-
-  const serviceMock = {
-    findAll: jest.fn(),
-    create: jest.fn(),
-  };
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-
-    const module: TestingModule =
-      await Test.createTestingModule({
-        controllers: [WorkOrdersController],
-        providers: [
-          {
-            provide: WorkOrdersService,
-            useValue: serviceMock,
-          },
-        ],
-      }).compile();
-
-    controller = module.get<WorkOrdersController>(
-      WorkOrdersController,
-    );
-  });
-
-  it('debe consultar las órdenes mediante el servicio', () => {
-    const orders = [
-      {
-        id: 1,
-        title: 'Orden de prueba',
-        status: 'PENDING',
-      },
-    ];
-
-    serviceMock.findAll.mockReturnValue(orders);
-
-    expect(controller.findAll()).toEqual(orders);
-    expect(serviceMock.findAll).toHaveBeenCalledTimes(1);
-  });
-
-  it('debe delegar la creación al servicio', () => {
-    const dto = {
-      title: 'Instalación de equipos',
-    };
-
-    const created = {
-      id: 3,
-      title: dto.title,
-      status: 'PENDING',
-    };
-
-    serviceMock.create.mockReturnValue(created);
-
-    expect(controller.create(dto)).toEqual(created);
-    expect(serviceMock.create).toHaveBeenCalledWith(dto);
-  });
+import type { Principal } from '../auth/role';
+const actor:Principal={sub:'u1',email:'lead@fieldops.local',role:'SUPERVISOR'};
+describe('WorkOrdersController',()=>{
+ const service={findAll:jest.fn(),findOne:jest.fn(),events:jest.fn(),create:jest.fn(),update:jest.fn()};
+ const controller=new WorkOrdersController(service as unknown as WorkOrdersService);
+ beforeEach(()=>jest.clearAllMocks());
+ it('delegates list with actor',()=>{controller.findAll(actor);expect(service.findAll).toHaveBeenCalledWith(actor);});
+ it('delegates creation with actor',()=>{
+  const dto={title:'Inspect workstation'};
+  controller.create(dto,actor);
+  expect(service.create).toHaveBeenCalledWith(dto,actor);
+ });
+ it('delegates updating',()=>{
+  controller.update('11111111-1111-4111-8111-111111111111',{status:'IN_PROGRESS'},actor);
+  expect(service.update).toHaveBeenCalledTimes(1);
+ });
 });
