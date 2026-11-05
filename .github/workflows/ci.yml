@@ -40,3 +40,56 @@ jobs:
           node-version: '24'
       - run: npm install --no-audit --no-fund
       - run: npx tsc --noEmit
+
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: ciLocalPassword2482
+      JWT_SECRET: ci-jwt-local-only-012345678901234567890
+      REPORTING_SERVICE_TOKEN: ci-reporting-local-only-012345678901234
+      CORS_ORIGIN: http://localhost:8081
+      ADMIN_EMAIL: admin@fieldops.local
+      ADMIN_PASSWORD: ci-test-admin-password-12345
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start integration stack
+        run: docker compose up -d --build
+      - name: Seed administrator
+        run: docker compose run --rm -e ADMIN_EMAIL -e ADMIN_PASSWORD api node scripts/seed-admin.mjs
+      - name: Test API -> PostgreSQL -> reporting
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/health >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -fsS http://localhost:3000/health | jq -e '.status=="ok"'
+          token=$(curl -fsS -X POST http://localhost:3000/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"admin@fieldops.local","password":"ci-test-admin-password-12345"}' | jq -r '.accessToken')
+          test "${#token}" -gt 24
+          order=$(curl -fsS -X POST http://localhost:3000/work-orders \
+            -H "Authorization: Bearer $token" \
+            -H 'Content-Type: application/json' \
+            -d '{"title":"CI smoke work order","priority":"HIGH"}')
+          id=$(echo "$order" | jq -r '.id')
+          test "${#id}" -gt 25
+          curl -fsS -X PATCH "http://localhost:3000/work-orders/$id" \
+            -H "Authorization: Bearer $token" \
+            -H 'Content-Type: application/json' \
+            -d '{"status":"IN_PROGRESS"}' | jq -e '.status=="IN_PROGRESS"'
+          curl -fsS -X PATCH "http://localhost:3000/work-orders/$id" \
+            -H "Authorization: Bearer $token" \
+            -H 'Content-Type: application/json' \
+            -d '{"status":"COMPLETED"}' | jq -e '.status=="COMPLETED"'
+          curl -fsS "http://localhost:3000/work-orders/$id/events" \
+            -H "Authorization: Bearer $token" | jq -e 'length==2'
+          curl -fsS http://localhost:3000/reports/overview \
+            -H "Authorization: Bearer $token" | jq -e '.total>=1'
+      - name: Show Docker logs if failed
+        if: failure()
+        run: docker compose logs --tail=100
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
